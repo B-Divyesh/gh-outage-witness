@@ -13,7 +13,8 @@
     "test:contract": "node --test tests/package-contract.test.mjs",
     "test": "cargo test && cargo clippy --all-targets -- -D warnings && npm run test:contract && npm run test:site",
     "pack:cli": "node scripts/pack-cli.mjs",
-    "verify:package": "node scripts/verify-package.mjs"
+    "verify:package": "node scripts/verify-package.mjs",
+    "verify:live": "node scripts/verify-live.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",

@@ -1,62 +1,121 @@
-# CI Outage Witness verification handoff — FAIL
+# CI Outage Witness repair handoff — PASS
 
-Candidate `2c173a130649cf2f8645736ea2bb95621d6e8173` was independently verified on
-2026-08-28 against <https://ci-outage-witness.sociobot.in/>. **Do not release.**
+Work order `ci-outage-witness-repair-1` repaired candidate
+`2c173a130649cf2f8645736ea2bb95621d6e8173` and every release-blocking
+finding in independent report commit
+`e8b7ad27e4e91fe7a74c62bdc08d746086cedd07`.
 
-The checkout installs, tests, builds, packages, and runs as a standalone binary.
-The live site is a byte-for-byte deployment of the candidate `dist/site`, works
-on desktop and 390px mobile, reloads offline, sends appropriate response/cache
-policies, stays within the bundle budgets, and scored Lighthouse 90/100/100/100.
+## Repairs
 
-Release is blocked by four material defects:
+- **V-001:** Renamed the public repository and compiled binary to the compatible
+  `B-Divyesh/gh-outage-witness` / `gh-outage-witness` pair, aligned README and
+  site commands with `gh outage-witness`, added a naming-contract test, and
+  published `v0.1.1` with the raw `gh-outage-witness_linux-amd64` release asset.
+  GitHub CLI 2.98.0 installed it without authentication in a fresh config and
+  returned `gh outage-witness 0.1.1`.
+- **V-002:** Sensitive assignments now consume complete single- or double-quoted
+  values, including whitespace and escaped characters. The exact verifier case
+  produces only `PASSWORD=[REDACTED]`, `TOKEN=[REDACTED]`, and
+  `AUTHORIZATION: Bearer [REDACTED]`. A Rust regression asserts the full output.
+- **V-003:** ZIP creation uses mode `0600` on Unix. Forced replacement first
+  restricts an existing file and only then truncates it. Tests cover both a new
+  archive and a pre-existing `0644` archive; the packaged consumer and real
+  GitHub capture also produced `0600` archives.
+- **V-004:** Both horizontally scrollable command elements are keyboard
+  focusable and named. The 390x844 dark/reduced-motion Playwright gate now runs
+  axe 4.10.2 and explicitly focuses both elements.
+- **V-005:** Footer links are inline-flex targets with a 44px minimum width.
+  Automated desktop/mobile checks assert every visible link, button, and select
+  is at least 44x44 CSS px.
 
-1. **Critical:** the advertised
-   `gh extension install B-Divyesh/ci-outage-witness` exits 1 because GitHub CLI
-   requires extension repository names to start with `gh-`. The advertised
-   source repository also returns 404 to unauthenticated users, so the public
-   free/open-source install path does not exist.
-2. **High:** built-in assignment redaction only partially removes a quoted
-   multi-word value. `PASSWORD="correct horse battery staple"` becomes
-   `PASSWORD=[REDACTED] horse battery staple"` in the bundle.
-3. **High:** the outer incident ZIP is created mode `0644`; its internal entry
-   modes of `0600` do not prevent other local users from reading the archive.
-4. **High:** axe at 390px reports serious `scrollable-region-focusable`
-   failures on both horizontally scrollable install/capture command elements.
+The researched scope and glacial ceramic visual system were unchanged. The
+service-worker cache advanced to `ci-outage-witness-v3` so existing visitors
+receive the corrected shell.
 
-One additional low-severity issue remains: the footer Terms link measures
-43x44 CSS px, below the 44x44 target requirement.
+## Verification evidence
 
-## Verification commands
+Clean/source gates on Node 22.23.2, npm 10.9.8, Rust/Cargo 1.98.0, Playwright
+1.58.2 Chromium, axe 4.10.2, and GitHub CLI 2.98.0:
 
 ```sh
 npm ci
-cargo fmt --all -- --check
 npm audit --audit-level=high
+cargo fmt --all -- --check
 npm test
 npm run build
-cargo package --locked
 npm run pack:cli
+npm run verify:package
+cargo package --locked --allow-dirty
 ```
 
-All commands above passed. `npm test` covered 6 Rust unit tests, 2 CLI tests, 1
-doctest, Clippy with warnings denied, and 9 local Playwright tests. The exact
-build produced `dist/site/` and the 4,633,584-byte release binary with SHA-256
-`9e98840a8e25f229d35cf4a31d1a56110aaa8626504979bee87ba0a81ad453e7`.
+- `npm ci`: 23 packages, 0 vulnerabilities; audit: 0 vulnerabilities.
+- Rust: 8 unit tests, 2 compiled CLI contract tests, and 1 doctest passed.
+- Clippy passed for all targets with `-D warnings`; rustfmt passed.
+- Naming-contract test passed; all 9 Playwright tests passed, including desktop,
+  390px dark/reduced-motion axe, keyboard, demo states, legal pages, offline,
+  and size budgets.
+- `npm run build` produced `dist/site/` and
+  `dist/cli/gh-outage-witness` (4,633,856 bytes, SHA-256
+  `2e3353b0190ff11768a177ce42b72f889dbf03b6b357930e4ccc6ee9ad635469`).
+- `cargo package` packaged and recompiled `ci-outage-witness 0.1.1`.
+- `npm run pack:cli` produced the byte-identical GitHub release asset and
+  `ci-outage-witness_0.1.1_linux_x86_64.tar.gz` (2,023,361 bytes, SHA-256
+  `3a66249bcef2e8681b75378b2747bccf5fec276b70c41672265841bcb496e828`).
+- `npm run verify:package` extracted the tarball as a fresh consumer, checked
+  version/help, performed a complete four-request mocked capture, verified API
+  token isolation from GitHub Status, exact quoted-secret removal, and archive
+  mode `0600`.
+- A real unauthenticated capture of public run `actions/checkout#32904951246`
+  collected run, job, attempt, and GitHub Status evidence. GitHub denied logs
+  with 403; `--strict --json` honestly exited 5 after writing a valid `0600`
+  partial bundle.
 
-Independent CLI checks used the packed binary in a fresh temporary consumer,
-controlled HTTP witnesses, and real public GitHub Actions run
-`actions/checkout#32904951246`. Normal, partial, strict, invalid-input, missing
-run, redaction, output collision, and `--force` recovery paths were exercised.
-Token isolation to the API host passed; the status host received no credential.
+## Deployment and live checks
 
-Full commands, exact browser/header/cache evidence, measured budgets, and defect
-reproductions are in [verification.md](verification.md).
+The work-order command `npm ci && npm run build:site` was followed by:
 
-## Next steps
+```sh
+/opt/fleet/lib/deploy-static.sh ci-outage-witness dist/site
+/opt/fleet/lib/verify-url.sh https://ci-outage-witness.sociobot.in/ <evidence-dir>
+npm run verify:live -- https://ci-outage-witness.sociobot.in/
+```
 
-- Choose a GitHub CLI-compatible public repository/binary name and make the
-  documented install/invocation work from a clean unauthenticated consumer.
-- Redact complete quoted assignment values and add adversarial redaction tests.
-- Create the outer ZIP with owner-only permissions on supported platforms.
-- Make mobile command scrollers keyboard focusable and expand the Terms target.
-- Add 390px axe and install-command smoke tests, then rerun verification.
+Deployment ID: `6b4afd98-fee7-4a94-a766-92526a912c40`.
+
+- HTTPS root returned 200 in 975ms with the expected title, `lang=en`, one h1,
+  one main, complete image alternatives, and zero console errors.
+- Desktop 1440x1000 and mobile 390x844 passed axe with zero serious/critical
+  findings, keyboard demo/reset operation, visible 3px focus, no page overflow,
+  and all visible controls at least 44x44px. Privacy and terms passed the same
+  mobile checks; the custom missing route returned HTTP 404.
+- Runtime traffic was same-origin and read-only. Source inspection found no
+  analytics, telemetry, cookies, browser storage, or third-party runtime code.
+- Service-worker update and true offline reload passed with cache
+  `ci-outage-witness-v3`; the offline status and complete documentation shell
+  remained available.
+- Root/CSS/SW response policy passed: CSP restricted to self, HSTS,
+  `nosniff`, COOP, no-referrer, restrictive Permissions-Policy, 30-second
+  revalidation for HTML/SW, and one-year immutable caching for hashed assets.
+- Every deployed HTML, JS, CSS, font, image, map, SVG, robots, sitemap, and
+  service-worker artifact was byte-identical to `dist/site`.
+- Lighthouse 12.8.2 simulated mobile: performance 100, accessibility 100,
+  best practices 100, SEO 100; FCP 1.2s, LCP 1.4s, TBT 40ms, CLS 0.001,
+  Speed Index 1.4s, total transfer 88 KiB. Synthetic INP was not measured.
+
+- Live product: <https://ci-outage-witness.sociobot.in/>
+- Public source: <https://github.com/B-Divyesh/gh-outage-witness>
+- Release: <https://github.com/B-Divyesh/gh-outage-witness/releases/tag/v0.1.1>
+
+## Known limits and next steps
+
+- The published precompiled extension asset is Linux amd64, matching the
+  factory package target. Add native release assets before advertising other
+  operating systems.
+- Pattern-based redaction still cannot prove removal of arbitrary secrets in
+  prose; the CLI and site continue to require review before sharing.
+- INP needs field interaction data; the synthetic run cannot report it.
+
+There are no known release-blocking defects in the repaired scope. Registry
+publishing was intentionally not performed; the factory owns registry
+credentials. Future package verification is `npm run pack:cli && npm run
+verify:package`.
