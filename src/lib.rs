@@ -337,6 +337,7 @@ pub fn classify(
     jobs: &JobsResponse,
     status: Option<&StatusSummary>,
     logs: &[EvidenceFile],
+    observed_at: DateTime<Utc>,
 ) -> Classification {
     let mut result = Classification {
         label: "inconclusive".into(),
@@ -345,12 +346,17 @@ pub fn classify(
         caveat: "This is an evidence-guided classification, not a root-cause determination.".into(),
     };
     let mut status_affected = false;
+    let recent_run = run
+        .updated_at
+        .or(run.run_started_at)
+        .or(run.created_at)
+        .is_some_and(|timestamp| (observed_at - timestamp).num_minutes().abs() <= 120);
     if let Some(status) = status {
         for component in &status.components {
             if component.name.to_lowercase().contains("actions")
                 && component.status != "operational"
             {
-                status_affected = true;
+                status_affected |= recent_run;
                 result.signals.push(format!(
                     "GitHub Status reported {} as {} at observation time",
                     component.name, component.status
@@ -360,7 +366,19 @@ pub fn classify(
         for incident in &status.incidents {
             for component in &incident.components {
                 if component.name.to_lowercase().contains("actions") {
-                    status_affected = true;
+                    let run_start = run.created_at;
+                    let run_end = run.updated_at.or(run.run_started_at).or(run.created_at);
+                    let incident_end = incident.updated_at.or(Some(observed_at));
+                    let overlaps = match (run_start, run_end, incident.created_at, incident_end) {
+                        (
+                            Some(run_start),
+                            Some(run_end),
+                            Some(incident_start),
+                            Some(incident_end),
+                        ) => incident_start <= run_end && incident_end >= run_start,
+                        _ => recent_run,
+                    };
+                    status_affected |= overlaps;
                     result.signals.push(format!(
                         "active public incident mentions {}: {}",
                         component.name, incident.name
@@ -705,7 +723,7 @@ pub fn collect(client: &GithubClient, options: &CollectOptions<'_>) -> Result<Ev
 
     let mut classification_logs = log_files.clone();
     classification_logs.extend(runner_files.clone());
-    let classification = classify(&run, &jobs, status.as_ref(), &classification_logs);
+    let classification = classify(&run, &jobs, status.as_ref(), &classification_logs, observed);
     Ok(Evidence {
         run,
         jobs,
@@ -941,7 +959,7 @@ mod tests {
                 data: log.as_bytes().to_vec(),
             }]
         };
-        let classification = classify(&run, &JobsResponse::default(), None, &files);
+        let classification = classify(&run, &JobsResponse::default(), None, &files, observed);
         Evidence {
             run,
             jobs: JobsResponse::default(),
@@ -987,6 +1005,52 @@ mod tests {
         let evidence = minimal_evidence("");
         assert_eq!(evidence.classification.label, "inconclusive");
         assert!(evidence.classification.signals[0].contains("no Actions logs"));
+    }
+
+    #[test]
+    fn platform_label_requires_temporal_correlation() {
+        let observed = DateTime::parse_from_rfc3339("2026-08-28T01:00:00Z")
+            .unwrap()
+            .with_timezone(&Utc);
+        let status = StatusSummary {
+            components: vec![StatusComponent {
+                name: "Actions".into(),
+                status: "degraded_performance".into(),
+            }],
+            ..StatusSummary::default()
+        };
+        let recent = Run {
+            created_at: Some(observed - chrono::Duration::minutes(30)),
+            updated_at: Some(observed - chrono::Duration::minutes(5)),
+            ..Run::default()
+        };
+        let stale = Run {
+            created_at: Some(observed - chrono::Duration::days(2)),
+            updated_at: Some(observed - chrono::Duration::days(2)),
+            ..Run::default()
+        };
+        assert_eq!(
+            classify(
+                &recent,
+                &JobsResponse::default(),
+                Some(&status),
+                &[],
+                observed
+            )
+            .label,
+            "probable-platform-degradation"
+        );
+        assert_eq!(
+            classify(
+                &stale,
+                &JobsResponse::default(),
+                Some(&status),
+                &[],
+                observed
+            )
+            .label,
+            "inconclusive"
+        );
     }
 
     #[test]

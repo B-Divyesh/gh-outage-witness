@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/B-Divyesh/ci-outage-witness"
 keywords = ["github-actions", "incident-response", "cli"]
 categories = ["command-line-utilities", "development-tools"]
-include = ["/src/**", "/Cargo.toml", "/Cargo.lock", "/README.md", "/LICENSE", "/CHANGELOG.md"]
+include = ["/src/**", "/tests/**", "/Cargo.toml", "/Cargo.lock", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 
 [[bin]]
 name = "gh-ci-outage-witness"
