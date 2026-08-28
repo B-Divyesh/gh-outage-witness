@@ -1,0 +1,9 @@
+{
+  "slug": "ci-outage-witness",
+  "title": "CI Outage Witness",
+  "artifact_class": "cli",
+  "user": "Maintainers of critical GitHub Actions pipelines who need an evidence bundle that distinguishes a repository failure, runner failure, and platform degradation when logs are delayed or absent.",
+  "smallest_useful_product": "A GitHub CLI extension that snapshots run metadata, job transitions, available logs, runner diagnostics, GitHub status components, and retry lineage into one redacted incident bundle.",
+  "monetization": "free",
+  "constraints": "Use read-only GitHub scopes; strip tokens, repository secrets, and configured log patterns; label status observations with timestamp and uncertainty."
+}
