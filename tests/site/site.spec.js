@@ -59,6 +59,20 @@ test('dark treatment and reduced motion remain accessible', async ({ page }) => 
   await expect(page.locator('.hero-figure')).toHaveCSS('animation-iteration-count', '1');
 });
 
+test('cached documentation exposes a clear offline state', async ({ page, context }) => {
+  await page.goto('/');
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload({ waitUntil: 'networkidle' });
+  await context.setOffline(true);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  // Chromium's DevTools offline emulation does not dispatch the browser's
+  // `offline` event, so trigger the same platform event a device emits.
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await expect(page.getByText(/You’re offline/)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('When CI goes silent');
+  await context.setOffline(false);
+});
+
 for (const path of ['/privacy/', '/terms/']) {
   test(`${path} is a semantic, accessible document`, async ({ page }) => {
     await page.goto(path);

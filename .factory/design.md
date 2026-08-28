@@ -62,7 +62,8 @@ space to distinguish observation from interpretation.
 
 ## Original asset plan and provenance
 
-- `site/public/ceramic-witness.webp` (1280px, 52 KB) and
+- `site/public/ceramic-witness.webp` (1280px, 52 KB),
+  `site/public/ceramic-witness-800.webp` (800px, 16 KB), and
   `site/public/ceramic-witness-720.webp` (720px, 16 KB): responsive derivatives
   of an original generated hero still life of
   five unlabeled porcelain evidence shards on blue glacial stone, with cobalt

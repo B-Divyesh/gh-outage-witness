@@ -109,12 +109,31 @@ document.querySelectorAll('[data-copy]').forEach((button) => {
 });
 
 const networkState = document.querySelector('[data-network-state]');
-function updateNetworkState() {
-  if (networkState) networkState.hidden = navigator.onLine;
+let offlineSignaled = !navigator.onLine;
+function updateNetworkState(online = navigator.onLine) {
+  if (networkState) networkState.hidden = online;
 }
-window.addEventListener('online', updateNetworkState);
-window.addEventListener('offline', updateNetworkState);
-updateNetworkState();
+async function checkNetworkState() {
+  if (!navigator.onLine || offlineSignaled) {
+    updateNetworkState(false);
+    return;
+  }
+  try {
+    const response = await fetch(`/robots.txt?connectivity=${Date.now()}`, { method: 'HEAD', cache: 'no-store' });
+    if (!offlineSignaled) updateNetworkState(response.ok);
+  } catch {
+    updateNetworkState(false);
+  }
+}
+window.addEventListener('online', () => {
+  offlineSignaled = false;
+  checkNetworkState();
+});
+window.addEventListener('offline', () => {
+  offlineSignaled = true;
+  updateNetworkState(false);
+});
+checkNetworkState();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
