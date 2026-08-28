@@ -269,7 +269,7 @@ impl Redactor {
             ),
             (
                 "sensitive-assignment",
-                r"(?i)([A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_KEY|CLIENT_SECRET|ACCESS_KEY)[A-Z0-9_]*\s*[:=]\s*)[^\s,;]+",
+                r#"(?i)([A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_KEY|CLIENT_SECRET|ACCESS_KEY)[A-Z0-9_]*\s*[:=]\s*)(?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*'|[^\s,;]+)"#,
             ),
             (
                 "url-credential",
@@ -751,18 +751,27 @@ pub fn write_bundle(
     redactor: &mut Redactor,
     force: bool,
 ) -> Result<(), AnyError> {
-    let file = if force {
-        OpenOptions::new()
-            .create(true)
-            .truncate(true)
-            .write(true)
-            .open(output)?
+    let mut options = OpenOptions::new();
+    options.write(true);
+    if force {
+        options.create(true);
     } else {
-        OpenOptions::new()
-            .create_new(true)
-            .write(true)
-            .open(output)?
-    };
+        options.create_new(true);
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let file = options.open(output)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+    }
+    if force {
+        file.set_len(0)?;
+    }
     let result = write_bundle_contents(file, repository, run_id, evidence, redactor);
     if result.is_err() {
         let _ = std::fs::remove_file(output);
@@ -992,6 +1001,28 @@ mod tests {
     }
 
     #[test]
+    fn redacts_entire_quoted_and_unquoted_sensitive_assignments() {
+        let mut redactor = Redactor::new(&[]).unwrap();
+        let input = br#"PASSWORD="correct horse battery staple"
+SINGLE_PASSWORD='another multi word value'
+TOKEN=singleword
+AUTHORIZATION: Bearer bearer-token-value"#;
+        let output = String::from_utf8(redactor.redact(input)).unwrap();
+        assert_eq!(
+            output,
+            "PASSWORD=[REDACTED]\nSINGLE_PASSWORD=[REDACTED]\nTOKEN=[REDACTED]\nAUTHORIZATION: Bearer [REDACTED]"
+        );
+        for secret in [
+            "correct horse battery staple",
+            "another multi word value",
+            "singleword",
+            "bearer-token-value",
+        ] {
+            assert!(!output.contains(secret));
+        }
+    }
+
+    #[test]
     fn prefers_runner_signal_over_generic_failure() {
         let evidence = minimal_evidence(
             "self-hosted runner lost communication with the server; process completed with exit code 1",
@@ -1081,6 +1112,39 @@ mod tests {
         assert!(!log.contains("hunter2"));
         assert!(log.contains("[REDACTED]"));
         drop(archive);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+                0o600
+            );
+        }
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn force_restricts_an_existing_bundle_before_writing() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let path = std::env::temp_dir().join(format!(
+            "ci-outage-witness-mode-test-{}-{}.zip",
+            std::process::id(),
+            Utc::now().timestamp_nanos_opt().unwrap()
+        ));
+        std::fs::write(&path, b"old bundle").unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+        let evidence = minimal_evidence("process completed with exit code 1");
+        let mut redactor = Redactor::new(&[]).unwrap();
+
+        write_bundle(&path, "acme/api", 42, &evidence, &mut redactor, true).unwrap();
+
+        assert_eq!(
+            std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+        assert!(ZipArchive::new(File::open(&path).unwrap()).is_ok());
         std::fs::remove_file(path).unwrap();
     }
 

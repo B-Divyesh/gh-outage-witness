@@ -43,11 +43,26 @@ test('copy action gives feedback', async ({ page, context }) => {
 
 test('mobile layout has no horizontal overflow and retains controls', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   await page.goto('/');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
   await expect(page.getByRole('link', { name: /Install the extension/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Build example receipt' })).toBeVisible();
+
+  const findings = await new AxeBuilder({ page }).analyze();
+  const serious = findings.violations.filter(({ impact }) => impact === 'serious' || impact === 'critical');
+  expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
+
+  const commands = page.locator('.command-block > code');
+  await commands.first().focus();
+  await expect(commands.first()).toBeFocused();
+  await commands.nth(1).focus();
+  await expect(commands.nth(1)).toBeFocused();
+
+  const terms = await page.getByRole('contentinfo').getByRole('link', { name: 'Terms' }).boundingBox();
+  expect(terms.width).toBeGreaterThanOrEqual(44);
+  expect(terms.height).toBeGreaterThanOrEqual(44);
 });
 
 test('dark treatment and reduced motion remain accessible', async ({ page }) => {

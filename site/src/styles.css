@@ -751,6 +751,10 @@ footer p span,
 }
 
 footer nav a {
+  display: inline-flex;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
   color: #d5dfdc;
 }
 

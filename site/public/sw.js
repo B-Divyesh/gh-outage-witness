@@ -1,4 +1,4 @@
-const CACHE = 'ci-outage-witness-v2';
+const CACHE = 'ci-outage-witness-v3';
 const SHELL = ['/', '/index.html', '/404.html', '/privacy/', '/terms/', '/witness-mark.svg', '/ceramic-witness-720.webp', '/ceramic-witness-800.webp', '/ceramic-witness.webp'];
 
 self.addEventListener('install', (event) => {

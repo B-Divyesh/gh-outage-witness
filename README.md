@@ -14,14 +14,14 @@ replace CI, or claim a root cause that the captured data cannot support.
 Install as a GitHub CLI extension:
 
 ```sh
-gh extension install B-Divyesh/ci-outage-witness
+gh extension install B-Divyesh/gh-outage-witness
 gh outage-witness --help
 ```
 
 Or build the single binary with Rust 1.85+:
 
 ```sh
-cargo install --git https://github.com/B-Divyesh/ci-outage-witness
+cargo install --git https://github.com/B-Divyesh/gh-outage-witness
 ```
 
 CI Outage Witness uses `GH_TOKEN` or `GITHUB_TOKEN`, then falls back to
@@ -68,6 +68,8 @@ is a successful capture and omissions are recorded in the bundle.
 - `redaction-report.json` — replacement counts, never the removed values.
 
 Default and custom redaction patterns are applied before anything is written.
+On Unix, the output archive is created with owner-only `0600` permissions,
+including when `--force` replaces an existing archive.
 Always inspect a bundle before sharing: pattern-based redaction cannot prove
 that arbitrary secret values embedded in prose were recognized.
 

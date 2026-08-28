@@ -8,4 +8,4 @@ if (result.status !== 0) process.exit(result.status ?? 1);
 
 const output = resolve(root, 'dist/cli');
 await mkdir(output, { recursive: true });
-await copyFile(resolve(root, 'target/release/gh-ci-outage-witness'), resolve(output, 'gh-ci-outage-witness'));
+await copyFile(resolve(root, 'target/release/gh-outage-witness'), resolve(output, 'gh-outage-witness'));
