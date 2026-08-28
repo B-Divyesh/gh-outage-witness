@@ -1,0 +1,28 @@
+[package]
+name = "ci-outage-witness"
+version = "0.1.0"
+edition = "2024"
+description = "A redacted incident receipt for one GitHub Actions run"
+license = "MIT"
+repository = "https://github.com/B-Divyesh/ci-outage-witness"
+keywords = ["github-actions", "incident-response", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "gh-ci-outage-witness"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { version = "0.4.42", default-features = false, features = ["clock", "serde"] }
+clap = { version = "4.5.47", features = ["derive"] }
+regex = "1.11.2"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.143"
+ureq = { version = "2.12.1", features = ["tls"] }
+zip = { version = "2.4.2", default-features = false, features = ["deflate"] }
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1
+panic = "abort"
