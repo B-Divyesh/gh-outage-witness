@@ -1,3 +1,16 @@
+//! Evidence collection and redaction primitives used by CI Outage Witness.
+//!
+//! ```
+//! use ci_outage_witness::Redactor;
+//!
+//! let mut redactor = Redactor::new(&[r"customer_[0-9]+".into()])?;
+//! let safe = String::from_utf8(redactor.redact(b"TOKEN=hunter2 customer_42"))?;
+//! assert!(!safe.contains("hunter2"));
+//! assert!(!safe.contains("customer_42"));
+//! # Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+//! ```
+#![forbid(unsafe_code)]
+
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
