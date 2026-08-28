@@ -31,7 +31,7 @@ Color never carries meaning alone: every state includes a label or symbol.
 - Interface and prose: `Inter`, self-hosted Latin subset, 400/600 variable
   weight. Its open counters keep dense incident prose readable.
 - Evidence, commands, timestamps, and tiny labels: `IBM Plex Mono`, self-hosted
-  Latin subset, 400/600. Tabular numbers make timelines scan cleanly.
+  Latin subset, 400 with synthesized emphasis. Tabular numbers make timelines scan cleanly.
 - Scale: 14, 16, 20, 28, and clamp(42–72) px; body is 17px with 1.58 leading.
   Long copy is capped at 68 characters.
 
@@ -62,7 +62,9 @@ space to distinguish observation from interpretation.
 
 ## Original asset plan and provenance
 
-- `site/public/ceramic-witness.webp`: original generated hero still life of
+- `site/public/ceramic-witness.webp` (1280px, 52 KB) and
+  `site/public/ceramic-witness-720.webp` (720px, 16 KB): responsive derivatives
+  of an original generated hero still life of
   five unlabeled porcelain evidence shards on blue glacial stone, with cobalt
   registration grooves. It clarifies the “separate observations become one
   durable receipt” concept. Generated for this product with the factory image
