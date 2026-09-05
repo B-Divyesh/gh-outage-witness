@@ -63,6 +63,13 @@
     "sandbox": "fixture capture without --runner-log; inspect archive paths and manifest source state"
   },
   {
+    "id": "available-logs",
+    "claim": "Available Actions logs are stored with ANSI controls and known credentials removed.",
+    "where": "landing how-it-works section, README",
+    "test": "npm run test:claims -- --grep @claim:available-logs",
+    "sandbox": "local GitHub fixture serving a ZIP log; inspect the stored log, classification, and manifest source state"
+  },
+  {
     "id": "authentication-inputs",
     "claim": "The CLI reads GH_TOKEN, then GITHUB_TOKEN, then the current GitHub CLI token.",
     "where": "privacy page, README",

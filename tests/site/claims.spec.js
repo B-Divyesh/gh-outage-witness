@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { execFileSync, spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -185,6 +185,54 @@ test('@claim:authentication-inputs uses standard GitHub token sources in order',
         `Bearer ${item.token}`, `Bearer ${item.token}`, `Bearer ${item.token}`
       ]);
     }
+  } finally {
+    await new Promise((resolveClose) => server.close(resolveClose));
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('@claim:available-logs stores and cleans an available Actions log', async () => {
+  const workspace = await mkdtemp(join(tmpdir(), 'ci-outage-witness-logs-'));
+  const sourceDir = join(workspace, 'source');
+  await mkdir(sourceDir);
+  await writeFile(join(sourceDir, 'job.log'), '\u001b[31mTOKEN=log-secret\u001b[0m\nProcess completed with exit code 1\n');
+  const logZip = join(workspace, 'logs.zip');
+  execFileSync('zip', ['-q', logZip, 'job.log'], { cwd: sourceDir });
+  const archiveBytes = await readFile(logZip);
+  const server = createServer((request, response) => {
+    if (request.url.endsWith('/logs')) {
+      response.setHeader('content-type', 'application/zip');
+      response.end(archiveBytes);
+    } else {
+      response.setHeader('content-type', 'application/json');
+      if (request.url === '/status') {
+        response.end('{"status":{"indicator":"none"},"components":[{"name":"Actions","status":"operational"}],"incidents":[]}');
+      } else if (request.url.includes('/jobs?')) {
+        response.end('{"total_count":1,"jobs":[{"id":7,"name":"test","status":"completed","conclusion":"failure"}]}');
+      } else if (request.url.endsWith('/attempts/1')) {
+        response.end('{"id":42,"run_attempt":1}');
+      } else {
+        response.end('{"id":42,"name":"CI","event":"push","status":"completed","conclusion":"failure","run_attempt":1,"created_at":"2026-09-05T00:00:00Z","html_url":"https://github.com/acme/api/actions/runs/42"}');
+      }
+    }
+  });
+  await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
+  try {
+    const port = server.address().port;
+    const output = join(workspace, 'capture.zip');
+    const result = await runCli([
+      'acme/api', '42', '--json', '--output', output,
+      '--api-url', `http://127.0.0.1:${port}`,
+      '--status-url', `http://127.0.0.1:${port}/status`
+    ], { GH_TOKEN: 'log-claim-token', GITHUB_TOKEN: '' });
+    expect(result.code, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout).classification.label).toBe('repository-failure');
+    const storedLog = zipText(output, 'logs/job.log');
+    expect(storedLog).toContain('Process completed with exit code 1');
+    expect(storedLog).toContain('TOKEN=[REDACTED]');
+    expect(storedLog).not.toContain('log-secret');
+    expect(storedLog).not.toContain('\u001b');
+    expect(JSON.parse(zipText(output, 'manifest.json')).sources.logs.state).toBe('collected');
   } finally {
     await new Promise((resolveClose) => server.close(resolveClose));
     await rm(workspace, { recursive: true, force: true });
