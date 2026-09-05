@@ -1,0 +1,25 @@
+{
+  "total_count": 2,
+  "jobs": [
+    {
+      "id": 77101,
+      "name": "test",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2025-07-08T16:18:00Z",
+      "completed_at": "2025-07-08T16:22:00Z",
+      "runner_name": "GitHub Actions 1000001",
+      "labels": ["ubuntu-latest"]
+    },
+    {
+      "id": 77102,
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2025-07-08T16:26:00Z",
+      "completed_at": "2025-07-08T16:30:00Z",
+      "runner_name": "prod-runner-04",
+      "labels": ["self-hosted", "linux", "prod"]
+    }
+  ]
+}

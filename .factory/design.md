@@ -89,3 +89,10 @@ Generation prompt (factory image generator):
 License: project-original generated artwork, released under the repository MIT
 license. Generator deployment: `factory-image` via
 `/opt/fleet/lib/gen-image.sh`; generation date 2026-08-28.
+
+Derived assets added for site metadata on 2026-09-05:
+
+- `site/public/ci-outage-witness-social.jpg` is a 1200×630 center crop of the
+  original generated ceramic witness image. It contains no added text.
+- `site/public/apple-touch-icon.png` is a 180×180 browser rendering of the
+  hand-authored `witness-mark.svg` on the site palette.

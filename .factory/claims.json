@@ -1,0 +1,135 @@
+[
+  {
+    "id": "cli-demo-bundle",
+    "claim": "The --demo command creates a populated incident bundle from bundled sample data.",
+    "where": "landing sample preview, README, CLI help",
+    "test": "npm run test:claims -- --grep @claim:cli-demo-bundle",
+    "sandbox": "fresh temporary directory; packaged sample; inspect the ZIP entries and structured result"
+  },
+  {
+    "id": "missing-evidence",
+    "claim": "Unavailable evidence is recorded in the bundle instead of guessed.",
+    "where": "landing limits, README",
+    "test": "npm run test:claims -- --grep @claim:missing-evidence",
+    "sandbox": "CLI demo fixture with unavailable Actions logs; inspect manifest source state and reason"
+  },
+  {
+    "id": "status-uncertainty",
+    "claim": "Public status is timestamped and labelled as uncertain evidence.",
+    "where": "landing sample and limits, README",
+    "test": "npm run test:claims -- --grep @claim:status-uncertainty",
+    "sandbox": "CLI demo fixture; inspect observed time and uncertainty in manifest"
+  },
+  {
+    "id": "cli-demo-offline",
+    "claim": "The CLI demo completes without GitHub access or network setup.",
+    "where": "landing terminal recording, README, demo documentation",
+    "test": "npm run test:claims -- --grep @claim:cli-demo-offline",
+    "sandbox": "CLI demo with unusable proxy settings and decoy GitHub credentials; verify a local bundle"
+  },
+  {
+    "id": "archive-private",
+    "claim": "On Unix, the output archive is restricted to its owner.",
+    "where": "privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:archive-private",
+    "sandbox": "CLI demo; measure the created archive mode as 0600"
+  },
+  {
+    "id": "redaction",
+    "claim": "ANSI controls, known credentials, and configured patterns are removed before files enter the bundle.",
+    "where": "landing limits, privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:redaction",
+    "sandbox": "CLI demo with bundled token, quoted password, and configured identifier; inspect archived runner log"
+  },
+  {
+    "id": "token-exclusion",
+    "claim": "A GitHub authentication token is not written into the output bundle or sent to the public status endpoint.",
+    "where": "privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:token-exclusion",
+    "sandbox": "local HTTP witness with a decoy token; inspect every request header and every archived file"
+  },
+  {
+    "id": "read-only-requests",
+    "claim": "The CLI uses only GET requests and does not retry a run or upload a bundle.",
+    "where": "landing facts, privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:read-only-requests",
+    "sandbox": "local HTTP witness; capture every request method and authorization header"
+  },
+  {
+    "id": "runner-opt-in",
+    "claim": "Runner diagnostic files are included only when explicitly supplied.",
+    "where": "landing install note, privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:runner-opt-in",
+    "sandbox": "fixture capture without --runner-log; inspect archive paths and manifest source state"
+  },
+  {
+    "id": "authentication-inputs",
+    "claim": "The CLI reads GH_TOKEN, then GITHUB_TOKEN, then the current GitHub CLI token.",
+    "where": "privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:authentication-inputs",
+    "sandbox": "local HTTP witness and fake gh executable; run one capture for each credential source and inspect authorization headers"
+  },
+  {
+    "id": "json-output",
+    "claim": "The --json option prints a structured capture result for automation.",
+    "where": "README, CLI help",
+    "test": "npm run test:claims -- --grep @claim:json-output",
+    "sandbox": "fixture capture; parse stdout as JSON and assert repository, run ID, and partial state"
+  },
+  {
+    "id": "output-recovery",
+    "claim": "The CLI preserves an existing output unless --force is supplied.",
+    "where": "README, CLI help",
+    "test": "npm run test:claims -- --grep @claim:output-recovery",
+    "sandbox": "fixture capture; retry same output, compare bytes, then recover with --force and inspect permissions"
+  },
+  {
+    "id": "strict-partial",
+    "claim": "Strict mode writes a partial bundle and returns exit code 5 when optional evidence is missing.",
+    "where": "README, CLI help",
+    "test": "npm run test:claims -- --grep @claim:strict-partial",
+    "sandbox": "fixture capture with a missing runner file; assert exit 5, JSON partial state, and written ZIP"
+  },
+  {
+    "id": "web-demo-sandbox",
+    "claim": "The browser demo loads realistic sample output and never changes real data.",
+    "where": "landing primary action, demo banner, demo page",
+    "test": "npm run test:claims -- --grep @claim:web-demo-sandbox",
+    "sandbox": "fresh browser with a real-data sentinel; change and reset demo; inspect separate storage key"
+  },
+  {
+    "id": "site-privacy",
+    "claim": "The site uses no cookies, analytics, or third-party runtime requests.",
+    "where": "privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:site-privacy",
+    "sandbox": "fresh browser context; record all requests, cookies, localStorage, and sessionStorage through a demo flow"
+  },
+  {
+    "id": "offline-site",
+    "claim": "The site and saved sample reload offline after the first visit.",
+    "where": "offline banner, privacy page, README",
+    "test": "npm run test:claims -- --grep @claim:offline-site",
+    "sandbox": "dedicated fresh browser context; load demo, activate service worker, set offline, and reload"
+  },
+  {
+    "id": "mit-license",
+    "claim": "CI Outage Witness is free under the MIT License.",
+    "where": "landing facts, terms, README",
+    "test": "npm run test:claims -- --grep @claim:mit-license",
+    "sandbox": "clean checkout; inspect complete LICENSE and the visible landing fact"
+  },
+  {
+    "id": "terminal-recording",
+    "claim": "The landing terminal recording represents the real CLI demo result.",
+    "where": "landing sample preview",
+    "test": "npm run test:claims -- --grep @claim:terminal-recording",
+    "sandbox": "run the built CLI demo and compare its command, classification, and output name with the recording"
+  },
+  {
+    "id": "packaged-cli",
+    "claim": "The built CLI runs from a clean consumer directory.",
+    "where": "README install and development sections",
+    "test": "npm run test:claims -- --grep @claim:packaged-cli",
+    "sandbox": "empty temporary consumer directory containing only the built executable; run --demo and inspect its output"
+  }
+]

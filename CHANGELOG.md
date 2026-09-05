@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 - 2026-09-05
+
+- Add a real `--demo` CLI flow backed by bundled sample incident files.
+- Add an isolated `/demo/` browser sample with a persistent label and reset.
+- Add executable coverage for every retained public claim.
+- Replace indirect landing copy with the job, audience, and sample action.
+- Add route metadata, social artwork, standard navigation, and build identity.
+
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 this project uses semantic versioning.
 

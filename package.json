@@ -1,7 +1,7 @@
 {
   "name": "ci-outage-witness-site",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite --config site/vite.config.js",
@@ -9,7 +9,8 @@
     "build:site": "vite build --config site/vite.config.js",
     "build:cli": "node scripts/build-cli.mjs",
     "build": "npm run clean && npm run build:site && npm run build:cli",
-    "test:site": "npm run build:site && playwright test",
+    "test:site": "npm run build && playwright test",
+    "test:claims": "npm run build && playwright test tests/site/claims.spec.js",
     "test:contract": "node --test tests/package-contract.test.mjs",
     "test": "cargo test && cargo clippy --all-targets -- -D warnings && npm run test:contract && npm run test:site",
     "pack:cli": "node scripts/pack-cli.mjs",

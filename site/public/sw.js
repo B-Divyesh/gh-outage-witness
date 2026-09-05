@@ -1,5 +1,5 @@
-const CACHE = 'ci-outage-witness-v3';
-const SHELL = ['/', '/index.html', '/404.html', '/privacy/', '/terms/', '/witness-mark.svg', '/ceramic-witness-720.webp', '/ceramic-witness-800.webp', '/ceramic-witness.webp'];
+const CACHE = 'ci-outage-witness-v4';
+const SHELL = ['/', '/index.html', '/demo/', '/privacy/', '/terms/', '/404.html', '/witness-mark.svg', '/apple-touch-icon.png', '/ci-outage-witness-social.jpg', '/ceramic-witness-720.webp', '/ceramic-witness-800.webp', '/ceramic-witness.webp'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

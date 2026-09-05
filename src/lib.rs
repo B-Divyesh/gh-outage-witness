@@ -743,6 +743,80 @@ pub fn is_partial(sources: &BTreeMap<String, SourceState>) -> bool {
         .any(|source| source.state != "collected" && source.state != "not-requested")
 }
 
+/// Load the realistic, network-free incident used by `--demo` and the site.
+pub fn demo_evidence() -> Result<Evidence, AnyError> {
+    let observed_at = DateTime::parse_from_rfc3339("2025-07-08T16:32:00Z")?.with_timezone(&Utc);
+    let run: Run = serde_json::from_str(include_str!("../examples/demo/run.json"))?;
+    let jobs: JobsResponse = serde_json::from_str(include_str!("../examples/demo/jobs.json"))?;
+    let status: StatusSummary =
+        serde_json::from_str(include_str!("../examples/demo/platform-status.json"))?;
+    let attempts = BTreeMap::from([
+        (
+            1,
+            serde_json::from_str(include_str!("../examples/demo/attempt-1.json"))?,
+        ),
+        (
+            2,
+            serde_json::from_str(include_str!("../examples/demo/attempt-2.json"))?,
+        ),
+        (
+            3,
+            serde_json::from_str(include_str!("../examples/demo/attempt-3.json"))?,
+        ),
+    ]);
+    let mut runner_data = include_bytes!("../examples/demo/runner-journal.log").to_vec();
+    runner_data.extend_from_slice(b"\x1b[31m2025-07-08T16:26:08Z delayed job marker\x1b[0m\n");
+    let runner_files = vec![EvidenceFile {
+        name: "runner-journal.log".into(),
+        data: runner_data,
+    }];
+    let mut sources = BTreeMap::from([
+        ("run".into(), SourceState::collected(observed_at, None)),
+        (
+            "jobs".into(),
+            SourceState::collected(observed_at, Some("2 jobs".into())),
+        ),
+        (
+            "logs".into(),
+            SourceState::unavailable(
+                observed_at,
+                "HTTP 404: logs were not available at capture time",
+            ),
+        ),
+        (
+            "runner-diagnostics".into(),
+            SourceState::collected(observed_at, Some("1 bundled sample file".into())),
+        ),
+    ]);
+    for attempt in 1..=3 {
+        sources.insert(
+            format!("attempt-{attempt}"),
+            SourceState::collected(observed_at, None),
+        );
+    }
+    let mut status_state = SourceState::collected(
+        observed_at,
+        Some("Actions reported degraded performance".into()),
+    );
+    status_state.uncertainty = Some(
+        "This is a public status observation at capture time, not proof of conditions throughout the run."
+            .into(),
+    );
+    sources.insert("github-status".into(), status_state);
+    let classification = classify(&run, &jobs, Some(&status), &runner_files, observed_at);
+    Ok(Evidence {
+        run,
+        jobs,
+        status: Some(status),
+        attempts,
+        log_files: Vec::new(),
+        runner_files,
+        sources,
+        classification,
+        observed_at,
+    })
+}
+
 pub fn write_bundle(
     output: &Path,
     repository: &str,

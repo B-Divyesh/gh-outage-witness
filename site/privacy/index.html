@@ -4,8 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#f5f7f4">
-    <meta name="description" content="Privacy policy for CI Outage Witness.">
+    <meta name="description" content="How CI Outage Witness handles GitHub data, local runner files, tokens, redaction, and browser storage.">
+    <link rel="canonical" href="https://ci-outage-witness.sociobot.in/privacy/">
     <link rel="icon" href="/witness-mark.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Privacy — CI Outage Witness">
+    <meta property="og:description" content="How CI Outage Witness handles GitHub data, local files, tokens, and browser storage.">
+    <meta property="og:url" content="https://ci-outage-witness.sociobot.in/privacy/">
+    <meta property="og:image" content="https://ci-outage-witness.sociobot.in/ci-outage-witness-social.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Privacy — CI Outage Witness">
+    <meta name="twitter:description" content="How CI Outage Witness handles GitHub data, local files, tokens, and browser storage.">
+    <meta name="twitter:image" content="https://ci-outage-witness.sociobot.in/ci-outage-witness-social.jpg">
     <title>Privacy — CI Outage Witness</title>
   </head>
   <body>
@@ -15,28 +26,37 @@
         <svg aria-hidden="true" viewBox="0 0 36 36" width="36" height="36"><path d="M6 6h24v24H6z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 21h5l3-8 3 12 2-6h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>CI Outage<br>Witness</span>
       </a>
-      <nav aria-label="Primary navigation"><a href="/">Product</a><a class="nav-source" href="https://github.com/B-Divyesh/gh-outage-witness">Source <span aria-hidden="true">↗</span></a></nav>
+      <nav aria-label="Primary navigation"><a href="/">Product</a><a class="nav-demo" href="/demo/">Demo</a><a href="/privacy/" aria-current="page">Privacy</a><a class="nav-source" href="https://github.com/B-Divyesh/gh-outage-witness" aria-label="Source on GitHub, external site">Source <span aria-hidden="true">↗</span></a></nav>
     </header>
-    <main id="main" class="legal-main">
-      <p class="section-index">Policy / effective 28 August 2026</p>
-      <h1>Privacy</h1>
-      <p class="lede">The short version: the CLI runs locally, the docs site does not track you, and your incident bundle belongs to you.</p>
+    <main id="main" class="legal-main" tabindex="-1">
+      <p class="section-index">Effective 5 September 2026</p>
+      <h1>Privacy for local incident bundles</h1>
+      <p class="lede">The CLI runs locally. The site has no tracking. Your incident bundle stays under your control.</p>
       <h2>CLI data</h2>
-      <p>CI Outage Witness reads the GitHub Actions run you identify through GitHub’s read-only API. It may read runner diagnostic files only when you pass them with <code>--runner-log</code>. It writes one ZIP to the path you choose and restricts that archive to your operating-system account on Unix. The project has no server, account system, telemetry, analytics, or automatic upload.</p>
+      <p>CI Outage Witness reads the Actions run you identify through GitHub’s API. It uses GET requests and never changes or retries the run.</p>
+      <p>Runner files are read only when you pass them with <code>--runner-log</code>. The CLI writes one ZIP to the path you choose.</p>
+      <p>On Unix, that ZIP uses owner-only permissions. The CLI has no server, account system, telemetry, or automatic upload.</p>
       <h2>Authentication</h2>
-      <p>The CLI reads a token from <code>GH_TOKEN</code>, <code>GITHUB_TOKEN</code>, or your local GitHub CLI session. It uses the token only for requests to your configured GitHub API host. It does not write the token into the bundle. Read-only Actions and contents access is sufficient.</p>
+      <p>The CLI can read a token from <code>GH_TOKEN</code>, <code>GITHUB_TOKEN</code>, or your local GitHub CLI session.</p>
+      <p>It sends that token only to your configured GitHub API host. It never sends the token to the public status endpoint.</p>
+      <p>The token is not written into the bundle.</p>
       <h2>Redaction and sharing</h2>
-      <p>Recognizable credential formats, sensitive assignments, private key blocks, and your configured patterns are replaced before files enter the bundle. Pattern matching cannot identify every arbitrary secret. You are responsible for reviewing a bundle before sharing it.</p>
+      <p>Known credential formats, sensitive assignments, private key blocks, and configured patterns are replaced before files enter the bundle.</p>
+      <p>Pattern matching cannot identify every unusual secret. Review every bundle before sharing it.</p>
       <h2>Documentation site</h2>
-      <p>This site uses no cookies, analytics, advertising, fingerprinting, forms, or third-party runtime requests. A service worker stores public site files on your device so the documentation remains available offline. Clear the site’s storage in your browser to remove that cache.</p>
+      <p>This site uses no cookies, analytics, advertising, fingerprinting, forms, or third-party runtime requests.</p>
+      <p>A service worker stores public site files on your device for offline use.</p>
+      <p>The demo stores only its selected sample under a <code>demo:</code> key. Reset demo replaces that sample with the original.</p>
+      <p>Clear this site’s browser storage to remove the sample and cache.</p>
       <h2>Third parties and contact</h2>
-      <p>GitHub handles API requests under its own terms when you run the CLI. The public status observation is fetched from githubstatus.com. Privacy questions can be opened as an issue in the project repository; do not include an incident bundle or secrets.</p>
+      <p>GitHub handles API requests under its terms when you run the CLI. The public status observation comes from githubstatus.com.</p>
+      <p>Open privacy questions in the project repository. Never include an incident bundle or secret in a public issue.</p>
     </main>
     <footer>
       <div class="footer-mark" aria-hidden="true"><span></span><span></span><span></span></div>
-      <p>CI Outage Witness<br><span>A small, durable incident receipt.</span></p>
-      <nav aria-label="Legal and project links"><a href="/privacy/" aria-current="page">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/gh-outage-witness">GitHub</a></nav>
-      <p class="copyright">MIT · 2026</p>
+      <p>CI Outage Witness<br><span>Capture a redacted evidence bundle for one Actions run.</span></p>
+      <nav aria-label="Legal and project links"><a href="/demo/">Demo</a><a href="/privacy/" aria-current="page">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/gh-outage-witness" aria-label="GitHub source, external site">GitHub ↗</a></nav>
+      <p class="copyright">Built by Param Factory · v0.1.2 · repair-2</p>
     </footer>
     <script type="module" src="/src/main.js"></script>
   </body>

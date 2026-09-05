@@ -1,28 +1,46 @@
 use chrono::Utc;
 use ci_outage_witness::{
-    CollectOptions, GithubClient, Redactor, ResultSummary, VERSION, collect, is_partial,
-    write_bundle,
+    CollectOptions, GithubClient, Redactor, ResultSummary, VERSION, collect, demo_evidence,
+    is_partial, write_bundle,
 };
 use clap::{ArgAction, Parser};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
 
-/// Capture a redacted incident receipt for one GitHub Actions run.
+/// Capture a redacted evidence bundle for one GitHub Actions run.
 #[derive(Debug, Parser)]
 #[command(
     name = "gh outage-witness",
     version = VERSION,
     about,
     long_about = "Capture run metadata, all jobs and rerun attempts, available logs, a timestamped GitHub Status observation, and runner files you explicitly add. Built-in and custom redactions are applied before the ZIP is written.\n\nThe evidence label is conservative and is not a root-cause determination.",
-    after_help = "EXAMPLES:\n  gh outage-witness acme/api 123456789\n  gh outage-witness acme/api 123456789 --runner-log journal.txt --redact 'customer_[0-9]+'\n  gh outage-witness acme/api 123456789 --json --strict\n\nEXIT CODES:\n  0 captured  2 usage  3 run unavailable  4 output error  5 strict partial"
+    after_help = "EXAMPLES:\n  gh outage-witness --demo\n  gh outage-witness acme/api 123456789\n  gh outage-witness acme/api 123456789 --runner-log journal.txt --redact 'customer_[0-9]+'\n  gh outage-witness acme/api 123456789 --json --strict\n\nEXIT CODES:\n  0 captured  2 usage  3 run unavailable  4 output error  5 strict partial"
 )]
 struct Cli {
     /// Repository as OWNER/REPO
     #[arg(value_parser = parse_repository)]
-    repository: String,
+    repository: Option<String>,
 
     /// Positive GitHub Actions run ID
-    run_id: u64,
+    run_id: Option<u64>,
+
+    /// Build a network-free sample bundle in a new temporary directory
+    #[arg(
+        long,
+        conflicts_with_all = [
+            "repository",
+            "run_id",
+            "output",
+            "runner_logs",
+            "redactions",
+            "strict",
+            "force",
+            "no_logs",
+            "api_url",
+            "status_url"
+        ]
+    )]
+    demo: bool,
 
     /// Output ZIP path (default: timestamped name)
     #[arg(short, long)]
@@ -76,7 +94,25 @@ fn main() -> ExitCode {
 }
 
 fn execute(cli: Cli) -> Result<u8, (u8, String)> {
-    if cli.run_id == 0 {
+    if cli.demo {
+        if cli.repository.is_some() || cli.run_id.is_some() || cli.output.is_some() {
+            return Err((
+                2,
+                "--demo does not accept a repository, run ID, or output path".into(),
+            ));
+        }
+        return execute_demo(cli.json);
+    }
+    let (repository, run_id) = match (cli.repository, cli.run_id) {
+        (Some(repository), Some(run_id)) => (repository, run_id),
+        _ => {
+            return Err((
+                2,
+                "provide OWNER/REPO and a positive RUN_ID, or use --demo".into(),
+            ));
+        }
+    };
+    if run_id == 0 {
         return Err((2, "RUN_ID must be a positive integer".into()));
     }
     let mut redactor = Redactor::new(&cli.redactions).map_err(|error| (2, error.to_string()))?;
@@ -94,8 +130,8 @@ fn execute(cli: Cli) -> Result<u8, (u8, String)> {
     let evidence = collect(
         &client,
         &CollectOptions {
-            repository: &cli.repository,
-            run_id: cli.run_id,
+            repository: &repository,
+            run_id,
             no_logs: cli.no_logs,
             runner_logs: &cli.runner_logs,
             observed_at,
@@ -106,22 +142,22 @@ fn execute(cli: Cli) -> Result<u8, (u8, String)> {
             3,
             format!(
                 "could not collect {} Actions run {}: {error}\nCheck the repository, run ID, network, and read-only token access.",
-                cli.repository, cli.run_id
+                repository, run_id
             ),
         )
     })?;
     let output = cli.output.unwrap_or_else(|| {
         PathBuf::from(format!(
             "ci-witness-{}-{}-{}.zip",
-            cli.repository.replace('/', "-"),
-            cli.run_id,
+            repository.replace('/', "-"),
+            run_id,
             observed_at.format("%Y%m%dT%H%M%SZ")
         ))
     });
     write_bundle(
         &output,
-        &cli.repository,
-        cli.run_id,
+        &repository,
+        run_id,
         &evidence,
         &mut redactor,
         cli.force,
@@ -135,8 +171,8 @@ fn execute(cli: Cli) -> Result<u8, (u8, String)> {
     let partial = is_partial(&evidence.sources);
     let result = ResultSummary {
         bundle: output.clone(),
-        repository: cli.repository,
-        run_id: cli.run_id,
+        repository,
+        run_id,
         observed_at,
         classification: evidence.classification,
         partial,
@@ -144,7 +180,7 @@ fn execute(cli: Cli) -> Result<u8, (u8, String)> {
     if cli.json {
         println!("{}", serde_json::to_string(&result).unwrap());
     } else {
-        println!("Witness saved to {}", output.display());
+        println!("Evidence bundle saved to {}", output.display());
         println!(
             "Evidence label: {} ({} confidence)",
             result.classification.label, result.classification.confidence
@@ -155,6 +191,46 @@ fn execute(cli: Cli) -> Result<u8, (u8, String)> {
         println!("Review every file before sharing.");
     }
     Ok(if cli.strict && partial { 5 } else { 0 })
+}
+
+fn execute_demo(json: bool) -> Result<u8, (u8, String)> {
+    let evidence = demo_evidence().map_err(|error| (4, format!("could not load demo: {error}")))?;
+    let directory = std::env::temp_dir().join(format!(
+        "ci-outage-witness-demo-{}-{}",
+        std::process::id(),
+        Utc::now().timestamp_nanos_opt().unwrap_or_default()
+    ));
+    std::fs::create_dir(&directory)
+        .map_err(|error| (4, format!("could not create demo directory: {error}")))?;
+    let output = directory.join("sample-incident.zip");
+    let mut redactor = Redactor::new(&["customer_[0-9]+".into()])
+        .map_err(|error| (4, format!("could not prepare demo redaction: {error}")))?;
+    write_bundle(
+        &output,
+        "sample-incidents/payments-api",
+        44_500_807,
+        &evidence,
+        &mut redactor,
+        false,
+    )
+    .map_err(|error| (4, format!("could not write demo bundle: {error}")))?;
+    let result = ResultSummary {
+        bundle: output.clone(),
+        repository: "sample-incidents/payments-api".into(),
+        run_id: 44_500_807,
+        observed_at: evidence.observed_at,
+        classification: evidence.classification,
+        partial: is_partial(&evidence.sources),
+    };
+    if json {
+        println!("{}", serde_json::to_string(&result).unwrap());
+    } else {
+        println!("Demo bundle saved to {}", output.display());
+        println!("Evidence label: probable-platform-degradation (medium confidence)");
+        println!("Sample data only; no network request or GitHub credential was used.");
+        println!("Review every file before sharing.");
+    }
+    Ok(0)
 }
 
 fn parse_repository(value: &str) -> Result<String, String> {

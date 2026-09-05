@@ -3,10 +3,10 @@ import { spawn, execFileSync } from 'node:child_process';
 import { chmod, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-const archive = resolve(root, 'dist/package/ci-outage-witness_0.1.1_linux_x86_64.tar.gz');
+const archive = resolve(root, 'dist/package/ci-outage-witness_0.1.2_linux_x86_64.tar.gz');
 const consumer = await mkdtemp(join(tmpdir(), 'ci-outage-witness-consumer-'));
 const requests = [];
 const server = createServer((request, response) => {
@@ -27,8 +27,18 @@ try {
   execFileSync('tar', ['-xzf', archive, '-C', consumer]);
   const binary = join(consumer, 'gh-outage-witness');
   await chmod(binary, 0o755);
-  assert.match(execFileSync(binary, ['--version'], { encoding: 'utf8' }), /0\.1\.1/);
+  assert.ok((await stat(join(consumer, 'examples/demo/run.json'))).size > 0);
+  assert.match(execFileSync(binary, ['--version'], { encoding: 'utf8' }), /0\.1\.2/);
   assert.match(execFileSync(binary, ['--help'], { encoding: 'utf8' }), /EXIT CODES/);
+  const demo = JSON.parse(execFileSync(binary, ['--demo', '--json'], {
+    encoding: 'utf8',
+    cwd: consumer,
+    env: { ...process.env, GH_TOKEN: 'unused-demo-token', HTTPS_PROXY: 'http://127.0.0.1:1' }
+  }));
+  assert.equal(demo.classification.label, 'probable-platform-degradation');
+  assert.equal((await stat(demo.bundle)).mode & 0o777, 0o600);
+  assert.match(execFileSync('unzip', ['-Z1', demo.bundle], { encoding: 'utf8' }), /runner\/runner-journal\.log/);
+  await rm(dirname(demo.bundle), { recursive: true, force: true });
 
   const runner = join(consumer, 'runner.log');
   await writeFile(runner, 'PASSWORD="correct horse battery staple"\nTOKEN=singleword\nAUTHORIZATION: Bearer bearer-token-value\n');
@@ -54,7 +64,7 @@ try {
   assert.equal(runnerEvidence, 'PASSWORD=[REDACTED]\nTOKEN=[REDACTED]\nAUTHORIZATION: Bearer [REDACTED]\n');
 
   assert.equal(requests.length, 4);
-  assert.ok(requests.every(({ method, headers }) => method === 'GET' && headers['user-agent'] === 'ci-outage-witness/0.1.1'));
+  assert.ok(requests.every(({ method, headers }) => method === 'GET' && headers['user-agent'] === 'ci-outage-witness/0.1.2'));
   assert.ok(requests.filter(({ url }) => url !== '/status').every(({ headers }) => headers.authorization === 'Bearer consumer-test-token'));
   assert.equal(requests.find(({ url }) => url === '/status').headers.authorization, undefined);
   console.log(`Packaged consumer capture passed: ${output} (mode ${mode.toString(8)}, ${requests.length} read-only requests)`);

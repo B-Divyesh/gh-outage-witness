@@ -1,0 +1,17 @@
+{
+  "status": { "indicator": "minor" },
+  "components": [
+    { "name": "Actions", "status": "degraded_performance" }
+  ],
+  "incidents": [
+    {
+      "name": "Delays with Actions workflow runs",
+      "status": "monitoring",
+      "created_at": "2025-07-08T16:12:00Z",
+      "updated_at": "2025-07-08T16:29:00Z",
+      "components": [
+        { "name": "Actions", "status": "degraded_performance" }
+      ]
+    }
+  ]
+}

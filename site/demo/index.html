@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#e8eeec">
+    <meta name="description" content="Try CI Outage Witness with a saved GitHub Actions incident. The sample is isolated and nothing is saved to real data.">
+    <link rel="canonical" href="https://ci-outage-witness.sociobot.in/demo/">
+    <link rel="icon" href="/witness-mark.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="CI Outage Witness">
+    <meta property="og:title" content="Demo — CI Outage Witness">
+    <meta property="og:description" content="Inspect a saved GitHub Actions incident in an isolated sample workspace.">
+    <meta property="og:url" content="https://ci-outage-witness.sociobot.in/demo/">
+    <meta property="og:image" content="https://ci-outage-witness.sociobot.in/ci-outage-witness-social.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Demo — CI Outage Witness">
+    <meta name="twitter:description" content="Inspect a saved GitHub Actions incident in an isolated sample workspace.">
+    <meta name="twitter:image" content="https://ci-outage-witness.sociobot.in/ci-outage-witness-social.jpg">
+    <title>Demo — CI Outage Witness</title>
+  </head>
+  <body class="demo-page">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div class="demo-banner" data-demo-banner aria-label="Demo controls">
+      <strong role="status">Demo — sample data, nothing is saved</strong>
+      <div>
+        <button type="button" class="banner-action" data-demo-reset>Reset demo</button>
+        <a class="banner-action" href="/#install" data-start-real>Start for real</a>
+      </div>
+    </div>
+    <div class="network-state" data-network-state role="status" aria-live="polite" hidden>
+      <span aria-hidden="true">○</span> You are offline. This saved sample still works.
+    </div>
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="CI Outage Witness home">
+        <svg aria-hidden="true" viewBox="0 0 36 36" width="36" height="36"><path d="M6 6h24v24H6z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 21h5l3-8 3 12 2-6h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>CI Outage<br>Witness</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="/">Product</a><a class="nav-demo" href="/demo/" aria-current="page">Demo</a><a href="/privacy/">Privacy</a>
+        <a class="nav-source" href="https://github.com/B-Divyesh/gh-outage-witness" aria-label="Source on GitHub, external site">Source <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+    <main id="main" class="demo-main" tabindex="-1">
+      <section class="demo-intro" aria-labelledby="demo-page-title">
+        <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span> Isolated sample workspace</p>
+        <h1 id="demo-page-title">Inspect a sample CI incident</h1>
+        <p class="lede">Change the evidence below to see how the label responds. This page never reads or changes your real data.</p>
+      </section>
+      <section class="demo-workspace" aria-labelledby="workspace-title">
+        <div class="section-heading compact">
+          <p class="section-index">Saved incident</p>
+          <h2 id="workspace-title">Review the populated evidence bundle</h2>
+          <p>Run 44500807 includes three retries, delayed jobs, missing logs, a runner journal, and a public status observation.</p>
+        </div>
+        <div class="demo-shell">
+          <form class="demo-controls" data-demo-form>
+            <label for="scenario">Sample incident</label>
+            <select id="scenario" name="scenario">
+              <option value="platform">Public Actions incident</option>
+              <option value="runner">Self-hosted runner disconnects</option>
+              <option value="code">Test process exits</option>
+              <option value="partial">Logs and status unavailable</option>
+            </select>
+            <button class="button primary" type="submit">Update sample bundle</button>
+          </form>
+          <div class="demo-output" data-demo-output aria-live="polite" aria-busy="false"></div>
+        </div>
+        <p class="demo-storage-note">Sample choices use the <code>demo:</code> browser storage namespace. Reset removes that sample state.</p>
+      </section>
+    </main>
+    <footer>
+      <div class="footer-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p>CI Outage Witness<br><span>Capture a redacted evidence bundle for one Actions run.</span></p>
+      <nav aria-label="Legal and project links">
+        <a href="/demo/" aria-current="page">Demo</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a>
+        <a href="https://github.com/B-Divyesh/gh-outage-witness" aria-label="GitHub source, external site">GitHub ↗</a>
+      </nav>
+      <p class="copyright">Built by Param Factory · v0.1.2 · repair-2</p>
+    </footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
