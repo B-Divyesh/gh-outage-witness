@@ -764,7 +764,7 @@ pub fn demo_evidence() -> Result<Evidence, AnyError> {
             serde_json::from_str(include_str!("../examples/demo/attempt-3.json"))?,
         ),
     ]);
-    let mut runner_data = include_bytes!("../examples/demo/runner-journal.log").to_vec();
+    let mut runner_data = include_bytes!("../examples/demo/runner-journal.txt").to_vec();
     runner_data.extend_from_slice(b"\x1b[31m2025-07-08T16:26:08Z delayed job marker\x1b[0m\n");
     let runner_files = vec![EvidenceFile {
         name: "runner-journal.log".into(),

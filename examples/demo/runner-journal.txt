@@ -1,0 +1,4 @@
+2025-07-08T16:25:58Z runner prod-runner-04 connected and waiting
+2025-07-08T16:26:04Z TOKEN=demo_token_that_must_not_ship
+2025-07-08T16:26:05Z PASSWORD="sample multi word password"
+2025-07-08T16:26:07Z request customer_991 assigned after queue delay
