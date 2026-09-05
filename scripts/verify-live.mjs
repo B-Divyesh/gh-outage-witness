@@ -114,7 +114,7 @@ try {
   await offline.setOffline(true);
   await offlinePage.reload({ waitUntil: 'domcontentloaded' });
   await offlinePage.evaluate(() => window.dispatchEvent(new Event('offline')));
-  await offlinePage.getByText(/You’re offline/).waitFor();
+  await offlinePage.getByText(/You are offline/).waitFor();
   assert.match(await offlinePage.locator('h1').textContent(), /Inspect a sample CI incident/);
   await offlinePage.getByText('Probable platform degradation', { exact: true }).waitFor();
   report.offline = { cache: 'ci-outage-witness-v4', reload: 'pass', update: 'pass' };
