@@ -138,8 +138,12 @@ footer nav {
 
 .site-header nav a,
 footer nav a {
+  display: inline-flex;
+  min-width: 44px;
   min-height: 44px;
   padding: 9px 0;
+  align-items: center;
+  justify-content: center;
   color: var(--moraine);
   font-size: 14px;
   font-weight: 600;
