@@ -5,6 +5,7 @@
 - Demo URL: <https://ci-outage-witness.sociobot.in/demo>
 - Last product implementation SHA: `70d51965be55fb1f7dbe2dd246f42ae996072318`
 - Claims and verification base SHA: `fb933d61c93fd65e0d11166787c3dab6156e502b`
+- Documentation report SHA: `57dc69b85ed1407c14d5b59e62c69be62d32ae6f`
 - Static site deployment: Azure Static Web App `sf-ci-outage-witness`, production
 - Deployed site source SHA: `6d8f560ae664cf9d6bb34e00f6fa7bacbee9287c`
 
