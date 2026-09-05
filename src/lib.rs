@@ -450,7 +450,7 @@ pub fn classify(
     if logs.is_empty() {
         result
             .signals
-            .push("no Actions logs were available at capture time".into());
+            .push("captured evidence contains no Actions log signal".into());
     }
     if result.signals.is_empty() {
         result.signals.push(
@@ -1109,7 +1109,7 @@ AUTHORIZATION: Bearer bearer-token-value"#;
     fn marks_missing_logs_as_inconclusive() {
         let evidence = minimal_evidence("");
         assert_eq!(evidence.classification.label, "inconclusive");
-        assert!(evidence.classification.signals[0].contains("no Actions logs"));
+        assert!(evidence.classification.signals[0].contains("no Actions log signal"));
     }
 
     #[test]
